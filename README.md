@@ -9,7 +9,7 @@ Trying my recreation of Daleks is easy:
 1. Install the Go language on your computer from [this site](https://golang.org/doc/install)
 2. Install the termbox screen control Go library using this command "go get -u github.com/nsf/termbox-go"
 3. Download the godaleks-v0.1.go from this repo
-4. Run the game using "go run godaleks-v0.1.go"
+4. Run the game using "go run godaleks-v0.1.go" (v0.1 = one level, no scores. v0.2 = infinite levels, scoring
 
 ### Game Play
 Arrows to move, s for Sonic Screwdriver (one per level), t for Teleport (1 per level), . to stand in one place, ESC to Quit
