@@ -1,4 +1,4 @@
-// v1.4. Change thinking from x y to row column to solve problems.
+// v2.1. Teleport after death should not lead to death. And more death.
 package main
 
 import (
@@ -11,14 +11,16 @@ import (
 )
 
 var score = 0
+var highscore = 0
 var level = 1
 var lives = 1
 var screwdrivers = 1
 var teleports = 1
-var board = [10][20]string{} //Game Board Array. Flip from columns rows to 10 rows (y) 20 columns (x)
 var row, col, randrow, randcol, whorow, whocol, dalekrow, dalekcol int
-var numrows = 10 // Number of rows in the gameboard
-var numcols = 20 // Number of columns in the gameboard. Typical spacing is twice as high as wide
+var numrows = 20             // Number of rows in the gameboard
+var numcols = 50             // Number of columns in the gameboard. Typical spacing is twice as high as wide
+var board = [20][50]string{} //Game Board Array. Flip from columns rows to 10 rows (y) 20 columns (x)
+// Update these numbers to match numrows & numcols
 var daleks = 5
 var alivedaleks = 5
 var dalekcount = 5
@@ -75,12 +77,12 @@ func initwho() {
 }
 
 func drawboard() { // Draw the board again after changing something
+	// fmt.Println("Welcome to Daleks Game!")
 	if dalekcount == 0 { // Killed all Daleks, level up
 		level = level + 1
 		lives = lives + 1
 		screwdrivers = screwdrivers + 1
 		teleports = teleports + 1
-
 		initboard()
 		initdaleks()
 		initwho()
@@ -96,7 +98,7 @@ func drawboard() { // Draw the board again after changing something
 	}
 	fmt.Println("Arrows=Move, .=Wait, t=Teleport, s=Screwdriver, ESC=Quit")
 	fmt.Printf("Lives: %d Sonic Screwdrivers: %d Teleports: %d Daleks: %d\n", lives, screwdrivers, teleports, dalekcount)
-	fmt.Printf("Level: %d Score: %d\n", level, score)
+	fmt.Printf("Level: %d Score: %d (High Score: %d)\n", level, score, highscore)
 }
 
 func dalekonwho() int {
@@ -182,11 +184,26 @@ func movedaleks() { // Move unless already dead. ([3]==1)
 				dalekscoord[i][1] = dalekcol
 			}
 
-			if dalekonwho() == 1 { // Dalek landed on Doctor Who. Game Over
+			if dalekonwho() == 1 { // Dalek landed on Doctor Who.
 				lives = lives - 1
 				if lives == 0 {
-					fmt.Println("\nPoor Doctor Who :(\n")
+					reset()
+					fmt.Println("DEATH By DALEK. No lives left. Exiting in 5 seconds. :(\n")
+					drawboard()
+					time.Sleep(5 * time.Second)
 					os.Exit(0)
+				} else {
+					reset()
+					fmt.Println("DEATH BY DALEK. Reducing lives, sleeping 5 seconds and teleporting. :(")
+					drawboard()
+					time.Sleep(5 * time.Second)
+					seednum := rand.NewSource(time.Now().UnixNano())
+					rnum := rand.New(seednum)
+					whorow = rnum.Intn(numrows)
+					whocol = rnum.Intn(numcols)
+					board[whorow][whocol] = "W"
+					reset()
+					fmt.Println("Teleport")
 				}
 			}
 
@@ -206,6 +223,16 @@ func movedaleks() { // Move unless already dead. ([3]==1)
 		}
 		i = i + 1
 	}
+}
+
+func teleportwho() {
+	board[whorow][whocol] = "."
+	seednum := rand.NewSource(time.Now().UnixNano())
+	rnum := rand.New(seednum)
+	whorow = rnum.Intn(numrows)
+	whocol = rnum.Intn(numcols)
+	board[whorow][whocol] = "W"
+	teleports = teleports - 1
 }
 
 //******************************************************************************************************************
@@ -309,23 +336,25 @@ keyPressListenerLoop:
 				case 116: // "t" Teleport
 					if teleports > 0 {
 						fmt.Println("Teleport")
-						board[whorow][whocol] = "."
+						teleportwho()
+						/* board[whorow][whocol] = "."
 						seednum := rand.NewSource(time.Now().UnixNano())
 						rnum := rand.New(seednum)
 						whorow = rnum.Intn(numrows)
 						whocol = rnum.Intn(numcols)
 						board[whorow][whocol] = "W"
 						teleports = teleports - 1
-						movedaleks() // Move Daleks closer to Doctor Who
+						movedaleks() // Move Daleks closer to Doctor Who */
 						drawboard()
 					} else {
 						fmt.Println("(No Teleports Left)")
-						movedaleks() // Move Daleks closer to Doctor Who
+						// movedaleks() // Move Daleks closer to Doctor Who
 						drawboard()
 					}
 
 				default:
 					//fmt.Println("Unknown Key")
+					drawboard()
 				}
 			}
 		case term.EventError:
